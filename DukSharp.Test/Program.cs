@@ -6,31 +6,32 @@ using System.Threading.Tasks;
 
 namespace DukSharp.Test
 {
-    class Program
+    public static class TestModule
     {
-        static void HelloWorld([Coerce] string test)
+        [ScriptMethod("Print")]
+        public static void HelloWorld([Coerce] string test)
         {
             Console.WriteLine(test);
         }
 
-        static void TestNumbers(sbyte sb, byte b, short s, ushort us, int i, uint ui, long l, ulong ul, float f, double d, decimal de)
+        public static void TestNumbers(sbyte sb, byte b, short s, ushort us, int i, uint ui, long l, ulong ul, float f, double d, decimal de)
         {
             Console.WriteLine($"{sb} {b} {s} {us} {i} {ui} {l} {ul} {f} {d} {de}");
         }
 
-        static void HelloWorld2(List<string> test)
+        [ScriptMethod("TestObject")]
+        public static void HelloWorld2(List<string> test)
         {
             Console.WriteLine(test.ToString());
         }
+    }
 
+    class Program
+    {
         static void Main(string[] args)
         {
             ScriptEngine se = new ScriptEngine();
-            se.AddModule("Test", new Dictionary<string, Delegate>() {
-                { "Print", new Action<string>(HelloWorld) },
-                { "TestNumbers", new Action<sbyte, byte, short, ushort, int, uint, long, ulong, float, double, decimal>(TestNumbers) },
-                { "TestObject", new Action<List<String>>(HelloWorld2) }
-            });
+            se.AddModule(typeof(TestModule));
             se.EvalString(@"
             Test.Print('Duktape version is: ' + Duktape.version);
 

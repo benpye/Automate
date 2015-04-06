@@ -17,6 +17,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Interop\SafeHandles\SafeContextHandle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Interop\UTF8ReturnMarshaller.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CoerceAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ScriptExecutionException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ScriptCompilationError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ScriptMethodAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ScriptModuleAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Interop\" />

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 using DukSharp.Interop;
 using DukSharp.Interop.SafeHandles;
@@ -105,7 +107,7 @@ namespace DukSharp
 
                     for(int i = 0; i < @params.Length; i++)
                     {
-                        if(@params[i].GetCustomAttributes(typeof(CoerceAttribute), false).Length != 0)
+                        if(@params[i].GetCustomAttribute<CoerceAttribute>() != null)
                             args[i] = MarshalFromJSCoerce(@params[i].ParameterType, i);
                         else
                             args[i] = MarshalFromJS(@params[i].ParameterType, i);
@@ -146,43 +148,89 @@ namespace DukSharp
                 Marshal.FreeHGlobal(fs[i].key);
         }
 
-        public void EvalString(string code, string filename = "Unspecified")
+        public void AddModule(Type module)
+        {
+            if(!module.IsAbstract || !module.IsSealed)
+                throw new ArgumentException($"{nameof(module)} must be a static class type", nameof(module));
+
+            var modAttr = module.GetCustomAttribute<ScriptModuleAttribute>();
+                
+            string moduleName = modAttr?.Name;
+
+            if (moduleName == null)
+            {
+                moduleName = module.Name;
+
+                if (moduleName.EndsWith("Module"))
+                    moduleName = moduleName.Substring(0, moduleName.Length - 6);
+            }
+
+            MethodInfo[] methods = module.GetMethods();
+
+            Dictionary<string, Delegate> scriptFuncs = new Dictionary<string, Delegate>();
+
+            foreach (var method in methods)
+            {
+                if (!method.IsStatic)
+                    continue;
+
+                var scriptAttr = method.GetCustomAttribute<ScriptMethodAttribute>();
+
+                string name = scriptAttr?.Name ?? method.Name;
+
+                List<Type> typeArgs = new List<Type>();
+                typeArgs.AddRange(method.GetParameters().Select(p => p.ParameterType));
+                typeArgs.Add(method.ReturnType);
+
+                Type delegateType = Expression.GetDelegateType(typeArgs.ToArray());
+
+                scriptFuncs.Add(name, method.CreateDelegate(delegateType));
+            }
+
+            AddModule(moduleName, scriptFuncs);
+        }
+
+        private void SafeCall(int nargs)
+        {
+            ReturnCode ret = duk_pcall(context, nargs);
+
+            if (ret == ReturnCode.Error)
+            {
+                IntPtr str = duk_safe_to_lstring(context, -1, UIntPtr.Zero);
+                string msg = MarshalHelper.StringFromUTF8(str);
+                duk_pop(context);
+                throw new ScriptExecutionException(msg);
+            }
+        }
+
+        public void EvalString(string code, string filename = "Unknown")
         {
             duk_push_string(context, filename);
             IntPtr c = MarshalHelper.StringToUTF8(code);
-            int err = duk_eval_raw(context, c, UIntPtr.Zero, CompileFlag.Eval | CompileFlag.StrLen | CompileFlag.Safe | CompileFlag.NoSource);
+            int err = duk_compile_raw(context, c, UIntPtr.Zero, CompileFlag.Eval | CompileFlag.StrLen | CompileFlag.Safe | CompileFlag.NoSource);
             Marshal.FreeHGlobal(c);
             string msg = "";
             if (err != 0)
             {
                 IntPtr str = duk_safe_to_lstring(context, -1, UIntPtr.Zero);
                 msg = MarshalHelper.StringFromUTF8(str);
+                duk_pop(context);
+                throw new ScriptCompilationError(msg, filename);
             }
-            duk_pop(context);
 
-            if (err != 0)
-                throw new DuktapeException($"Evaluation failed: {msg}");
+            SafeCall(0);
+            duk_pop(context);
         }
 
-        private T ExecFunctionInternal<T>(string name, object[] args, bool returns)
+        private T ExecFunction<T>(string name, object[] args, bool returns)
         {
             duk_push_global_object(context);
             duk_get_prop_string(context, -1, name);
 
-            ReturnCode rc;
-
             foreach (var arg in args)
                 MarshalToJS(arg);
-            
-            rc = duk_pcall(context, args.Length);
 
-            if (rc == ReturnCode.Error)
-            {
-                IntPtr str = duk_safe_to_lstring(context, -1, UIntPtr.Zero);
-                string msg = MarshalHelper.StringFromUTF8(str);
-                duk_pop(context);
-                throw new DuktapeException($"Execution failed: {msg}");
-            }
+            SafeCall(args.Length);
 
             T ret = default(T);
 
@@ -196,12 +244,12 @@ namespace DukSharp
 
         public T ExecFunction<T>(string name, params object[] args)
         {
-            return ExecFunctionInternal<T>(name, args, true);
+            return ExecFunction<T>(name, args, true);
         }
 
         public void ExecFunction(string name, params object[] args)
         {
-            ExecFunctionInternal<object>(name, args, false);
+            ExecFunction<object>(name, args, false);
         }
     }
 }
