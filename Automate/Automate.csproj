@@ -60,6 +60,7 @@
     <Compile Include="MainActivity.cs" />
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AutoApp.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -83,7 +84,7 @@
     <AndroidResource Include="Resources\drawable-xxxhdpi\Icon.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DukSharp.Android\DukSharp.Android.csproj">
+    <ProjectReference Include="..\DukSharp\Android\DukSharp.Android.csproj">
       <Project>{4B2E6BE4-7505-4127-946E-A1C903031351}</Project>
       <Name>DukSharp.Android</Name>
     </ProjectReference>

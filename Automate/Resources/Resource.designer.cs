@@ -1112,9 +1112,6 @@ namespace Automate
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f0a0040
-			public const int ScriptList = 2131361856;
-			
 			// aapt resource value: 0x7f0a003f
 			public const int Toolbar = 2131361855;
 			
