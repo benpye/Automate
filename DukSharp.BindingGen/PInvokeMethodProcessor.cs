@@ -250,6 +250,16 @@ namespace DukSharp.BindingGen
                 .AddModifiers(Syntax.Token(SyntaxKind.StaticKeyword))
                 .AddModifiers(Syntax.Token(SyntaxKind.PublicKeyword))
                 .AddParameterListParameters(args.Select(a => Syntax.Parameter(Syntax.Identifier(a.Item1.Name)).WithType(Syntax.ParseTypeName(a.Item2.Item1))).ToArray())
+                .AddAttributeLists(
+                    Syntax.AttributeList(
+                        Syntax.SingletonSeparatedList(
+                            Syntax.Attribute(Syntax.ParseName("MethodImpl"))
+                            .AddArgumentListArguments(
+                                Syntax.AttributeArgument(Syntax.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, Syntax.IdentifierName("MethodImplOptions"), Syntax.IdentifierName("AggressiveInlining")))
+                            )
+                        )
+                    )
+                )
                 .WithBody(Syntax.Block(statements));
 
             rootClass = rootClass.AddMembers(ms);
@@ -261,9 +271,13 @@ namespace DukSharp.BindingGen
         {
             CompilationUnitSyntax cu = Syntax.CompilationUnit()
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System")))
+                .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.CodeDom.Compiler")))
+                .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.CompilerServices")))
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.InteropServices")));
 
             NamespaceDeclarationSyntax ns = Syntax.NamespaceDeclaration(Syntax.IdentifierName(Namespace));
+
+            rootClass = rootClass.AddAttributeLists(Syntax.AttributeList(Syntax.SingletonSeparatedList<AttributeSyntax>(Syntax.Attribute(Syntax.ParseName("GeneratedCode")))));
 
             rootClass = rootClass.AddMembers(nativeMethodClass);
             ns = ns.AddMembers(rootClass);
