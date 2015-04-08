@@ -8,17 +8,13 @@ namespace DukSharp.BindingGen
 {
     public class Argument
     {
-        public Argument(string name, string typeString, CType ctype, string netType)
+        public Argument(string name, CType ctype)
         {
             Name = name;
-            TypeString = typeString;
-            CType = ctype;
-            NetType = netType;
+            Type = ctype;
         }
 
         public string Name { get; }
-        public string TypeString { get; }
-        public CType CType { get; }
-        public string NetType { get; }
+        public CType Type { get; }
     }
 }

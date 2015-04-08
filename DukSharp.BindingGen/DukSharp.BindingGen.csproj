@@ -122,8 +122,11 @@
   <ItemGroup>
     <Compile Include="Argument.cs" />
     <Compile Include="CType.cs" />
+    <Compile Include="CWrapperMethodProcessor.cs" />
+    <Compile Include="IMethodProcessor.cs" />
     <Compile Include="Method.cs" />
-    <Compile Include="PinvokeGenerator.cs" />
+    <Compile Include="PrototypeParser.cs" />
+    <Compile Include="PInvokeMethodProcessor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -8,16 +8,18 @@ namespace DukSharp.BindingGen
 {
     public class CType
     {
-        public CType(string name, int pointerLevel, bool c)
+        public CType(string type)
         {
-            Name = name;
-            PointerLevel = pointerLevel;
-            Const = c;
+            Name = type.Replace("*", "").Replace("const", "").Trim();
+            PointerLevel = type.Where(c => c == '*').Count();
+            Const = type.Contains("const");
+            TypeString = type;
         }
 
         public string Name { get; }
         public int PointerLevel { get; }
         public bool Const { get; }
+        public string TypeString { get; }
 
         public override bool Equals(Object obj)
         {
