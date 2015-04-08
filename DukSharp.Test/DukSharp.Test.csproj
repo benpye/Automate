@@ -48,6 +48,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DukSharp\DukSharp.csproj">
+      <Project>{f8f47776-d0e6-4208-8d5c-d37f6168c7c6}</Project>
+      <Name>DukSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -56,10 +62,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <ProjectReference Include="..\DukSharp\Desktop\DukSharp.Desktop.csproj">
-      <Project>{0E309025-A6AC-42EC-9F8F-9471B76F0465}</Project>
-      <Name>DukSharp.Desktop</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

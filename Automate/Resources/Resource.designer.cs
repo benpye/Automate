@@ -26,7 +26,6 @@ namespace Automate
 		
 		public static void UpdateIdValues()
 		{
-			global::DukSharp.Android.Resource.String.library_name = global::Automate.Resource.String.library_name;
 		}
 		
 		public partial class Animation
@@ -1474,9 +1473,6 @@ namespace Automate
 			
 			// aapt resource value: 0x7f050000
 			public const int hello = 2131034112;
-			
-			// aapt resource value: 0x7f050012
-			public const int library_name = 2131034130;
 			
 			static String()
 			{

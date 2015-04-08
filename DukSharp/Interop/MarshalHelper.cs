@@ -36,7 +36,7 @@ namespace DukSharp.Interop
 
             byte[] bytes = new byte[i];
             Marshal.Copy(ptr, bytes, 0, bytes.Length);
-            string str = Encoding.UTF8.GetString(bytes);
+            string str = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
             return str;
         }
 

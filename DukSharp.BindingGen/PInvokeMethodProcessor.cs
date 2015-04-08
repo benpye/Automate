@@ -20,6 +20,8 @@ namespace DukSharp.BindingGen
 
         private Dictionary<CType, string> internalTypeMap;
 
+        public List<string> Usings { get; } = new List<string>();
+
         public string Class { get; set; }
         public string Namespace { get; set; }
         public string LibraryName { get; set; }
@@ -97,7 +99,7 @@ namespace DukSharp.BindingGen
 
             MethodDeclarationSyntax ms = Syntax.MethodDeclaration(Syntax.ParseTypeName(returnType), method.Return.Name)
                     .AddModifiers(Syntax.Token(SyntaxKind.StaticKeyword))
-                    .AddModifiers(Syntax.Token(SyntaxKind.PrivateKeyword))
+                    .AddModifiers(Syntax.Token(SyntaxKind.PublicKeyword))
                     .AddModifiers(Syntax.Token(SyntaxKind.ExternKeyword))
                     .AddAttributeLists(
                         Syntax.AttributeList(
@@ -217,7 +219,7 @@ namespace DukSharp.BindingGen
                                         Syntax.InvocationExpression(
                                             Syntax.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                 Syntax.IdentifierName("NativeMethods"), Syntax.IdentifierName(method.Return.Name)),
-                                            Syntax.ArgumentList(Syntax.SeparatedList<ArgumentSyntax>(args.Select(a => Syntax.Argument(Syntax.IdentifierName(a.Item1.Name))))))
+                                            Syntax.ArgumentList(Syntax.SeparatedList<ArgumentSyntax>(args.Select(a => Syntax.Argument(Syntax.IdentifierName(a.Item2.Item2))))))
                                         )
                                     )
                                 )
@@ -231,7 +233,7 @@ namespace DukSharp.BindingGen
                             Syntax.InvocationExpression(
                                 Syntax.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     Syntax.IdentifierName("NativeMethods"), Syntax.IdentifierName(method.Return.Name)),
-                                Syntax.ArgumentList(Syntax.SeparatedList<ArgumentSyntax>(args.Select(a => Syntax.Argument(Syntax.IdentifierName(a.Item1.Name)))))
+                                Syntax.ArgumentList(Syntax.SeparatedList<ArgumentSyntax>(args.Select(a => Syntax.Argument(Syntax.IdentifierName(a.Item2.Item2)))))
                             )
                         ));
                 }
@@ -275,9 +277,18 @@ namespace DukSharp.BindingGen
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.CompilerServices")))
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.InteropServices")));
 
+            foreach(var use in Usings)
+            {
+                cu = cu.AddUsings(Syntax.UsingDirective(Syntax.IdentifierName(use)));
+            }
+
             NamespaceDeclarationSyntax ns = Syntax.NamespaceDeclaration(Syntax.IdentifierName(Namespace));
 
-            rootClass = rootClass.AddAttributeLists(Syntax.AttributeList(Syntax.SingletonSeparatedList<AttributeSyntax>(Syntax.Attribute(Syntax.ParseName("GeneratedCode")))));
+            rootClass = rootClass.AddAttributeLists(Syntax.AttributeList(Syntax.SingletonSeparatedList<AttributeSyntax>(Syntax.Attribute(Syntax.ParseName("GeneratedCode"))
+                                .AddArgumentListArguments(
+                                    Syntax.AttributeArgument(Syntax.LiteralExpression(SyntaxKind.StringLiteralExpression, Syntax.Literal("DukSharp.BindingGen"))),
+                                    Syntax.AttributeArgument(Syntax.LiteralExpression(SyntaxKind.StringLiteralExpression, Syntax.Literal("1.0")))
+                                ))));
 
             rootClass = rootClass.AddMembers(nativeMethodClass);
             ns = ns.AddMembers(rootClass);

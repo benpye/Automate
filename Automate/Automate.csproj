@@ -84,20 +84,12 @@
     <AndroidResource Include="Resources\drawable-xxxhdpi\Icon.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DukSharp\Android\DukSharp.Android.csproj">
-      <Project>{4B2E6BE4-7505-4127-946E-A1C903031351}</Project>
-      <Name>DukSharp.Android</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <AndroidResource Include="Resources\values\Themes.xml">
       <SubType>Designer</SubType>
     </AndroidResource>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
-  <ItemGroup>
-    <Folder Include="duktape\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <AndroidNativeLibrary Include="..\duktape\libs\armeabi\libduktape.so">
       <Link>duktape\libs\armeabi\libduktape.so</Link>

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace DukSharp.Interop.SafeHandles
 {
-    class SafeContextHandle : SafeHandle
+    public class SafeContextHandle : SafeHandle
     {
-        internal SafeContextHandle() : base(IntPtr.Zero, true) { }
+        public SafeContextHandle() : base(IntPtr.Zero, true) { }
 
         public override bool IsInvalid => IntPtr.Zero == handle;
 
         protected override bool ReleaseHandle()
         {
-            duktape.duk_destroy_heap(handle);
+            Duktape.duk_destroy_heap(handle);
             return true;
         }
     }

@@ -26,8 +26,8 @@ namespace DukSharp.BindingGen
 
             PrototypeParser gen = new PrototypeParser();
 
-            pro.Class = "duktape";
-            pro.Namespace = "DukSharp";
+            pro.Class = "Duktape";
+            pro.Namespace = "DukSharp.Interop";
             pro.LibraryName = "duktape";
             gen.Protoypes.AddRange(protos);
 
@@ -68,21 +68,23 @@ namespace DukSharp.BindingGen
             pro.TypeMap.Add("const duk_function_list_entry *", "duk_function_list_entry[]");
             pro.TypeMap.Add("const duk_number_list_entry *", "duk_number_list_entry[]");
 
-            pro.TypeOverride.Add("duk_get_type", new Tuple<string, string>(null, "JSType"));
-            pro.TypeOverride.Add("duk_check_type", new Tuple<string, string>("type", "JSType"));
-            pro.TypeOverride.Add("duk_get_type_mask", new Tuple<string, string>(null, "TypeMask"));
-            pro.TypeOverride.Add("duk_check_type_mask", new Tuple<string, string>("mask", "TypeMask"));
-            pro.TypeOverride.Add("duk_to_defaultvalue", new Tuple<string, string>("hint", "CoercionHint"));
-            pro.TypeOverride.Add("duk_to_primitive", new Tuple<string, string>("hint", "CoercionHint"));
-            pro.TypeOverride.Add("duk_def_prop", new Tuple<string, string>("flags", "PropertyFlags"));
-            pro.TypeOverride.Add("duk_enum", new Tuple<string, string>("enum_flags", "EnumFlag"));
-            pro.TypeOverride.Add("duk_pcall", new Tuple<string, string>(null, "ReturnCode"));
-            pro.TypeOverride.Add("duk_pcall_method", new Tuple<string, string>(null, "ReturnCode"));
-            pro.TypeOverride.Add("duk_pcall_prop", new Tuple<string, string>(null, "ReturnCode"));
-            pro.TypeOverride.Add("duk_safe_call", new Tuple<string, string>(null, "ReturnCode"));
-            pro.TypeOverride.Add("duk_destroy_heap", new Tuple<string, string>("ctx", "IntPtr"));
+            pro.TypeOverride.Add("public_duk_get_type", new Tuple<string, string>(null, "JSType"));
+            pro.TypeOverride.Add("public_duk_check_type", new Tuple<string, string>("type", "JSType"));
+            pro.TypeOverride.Add("public_duk_get_type_mask", new Tuple<string, string>(null, "TypeMask"));
+            pro.TypeOverride.Add("public_duk_check_type_mask", new Tuple<string, string>("mask", "TypeMask"));
+            pro.TypeOverride.Add("public_duk_to_defaultvalue", new Tuple<string, string>("hint", "CoercionHint"));
+            pro.TypeOverride.Add("public_duk_to_primitive", new Tuple<string, string>("hint", "CoercionHint"));
+            pro.TypeOverride.Add("public_duk_def_prop", new Tuple<string, string>("flags", "PropertyFlags"));
+            pro.TypeOverride.Add("public_duk_enum", new Tuple<string, string>("enum_flags", "EnumFlag"));
+            pro.TypeOverride.Add("public_duk_pcall", new Tuple<string, string>(null, "ReturnCode"));
+            pro.TypeOverride.Add("public_duk_pcall_method", new Tuple<string, string>(null, "ReturnCode"));
+            pro.TypeOverride.Add("public_duk_pcall_prop", new Tuple<string, string>(null, "ReturnCode"));
+            pro.TypeOverride.Add("public_duk_safe_call", new Tuple<string, string>(null, "ReturnCode"));
+            pro.TypeOverride.Add("public_duk_destroy_heap", new Tuple<string, string>("ctx", "IntPtr"));
 
             pro.ModifyPublicName = a => a.Substring("public_".Length);
+
+            pro.Usings.Add("DukSharp.Interop.SafeHandles");
             
             cw.CLines.Add("#include \"duktape.h\"\n");
             cw.Prefix = "public_";

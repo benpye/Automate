@@ -9,7 +9,7 @@ using System.Reflection;
 using DukSharp.Interop;
 using DukSharp.Interop.SafeHandles;
 
-using static DukSharp.Interop.duktape;
+using static DukSharp.Interop.Duktape;
 using Newtonsoft.Json;
 using System.Runtime.InteropServices;
 
@@ -18,9 +18,9 @@ namespace DukSharp
     public class ScriptEngine
     {
         private static duk_fatal_function fatalErrorHandler =
-            (IntPtr ctx, ErrorCode code, string msg) =>
+            (ctx, code, msg) =>
             {
-                throw new DuktapeException($"Fatal Duktape error ({code}): {msg}");
+                throw new DuktapeException($"Fatal Duktape error ({code}): {MarshalHelper.StringFromUTF8(msg)}");
             };
 
         private SafeContextHandle context;
@@ -101,7 +101,7 @@ namespace DukSharp
         {
             var f = new duk_c_function((IntPtr ctx) =>
                 {
-                    var @params = function.Method.GetParameters();
+                    var @params = function.GetMethodInfo().GetParameters();
 
                     object[] args = new object[@params.Length];
 
@@ -130,7 +130,7 @@ namespace DukSharp
             {
                 fs[i].key = MarshalHelper.StringToUTF8(function.Key);
                 fs[i].value = WrapFunction(function.Value);
-                fs[i].nargs = (function.Value.Method.GetParameters().Length);
+                fs[i].nargs = (function.Value.GetMethodInfo().GetParameters().Length);
                 i++;
             }
 
@@ -150,10 +150,11 @@ namespace DukSharp
 
         public void AddModule(Type module)
         {
-            if(!module.IsAbstract || !module.IsSealed)
+            TypeInfo ti = module.GetTypeInfo();
+            if (!ti.IsAbstract || !ti.IsSealed)
                 throw new ArgumentException($"{nameof(module)} must be a static class type", nameof(module));
 
-            var modAttr = module.GetCustomAttribute<ScriptModuleAttribute>();
+            var modAttr = ti.GetCustomAttribute<ScriptModuleAttribute>();
                 
             string moduleName = modAttr?.Name;
 
@@ -165,7 +166,7 @@ namespace DukSharp
                     moduleName = moduleName.Substring(0, moduleName.Length - 6);
             }
 
-            MethodInfo[] methods = module.GetMethods();
+            IEnumerable<MethodInfo> methods = module.GetRuntimeMethods();
 
             Dictionary<string, Delegate> scriptFuncs = new Dictionary<string, Delegate>();
 
@@ -196,8 +197,7 @@ namespace DukSharp
 
             if (ret == ReturnCode.Error)
             {
-                IntPtr str = duk_safe_to_lstring(context, -1, UIntPtr.Zero);
-                string msg = MarshalHelper.StringFromUTF8(str);
+                string msg = duk_safe_to_string(context, -1);
                 duk_pop(context);
                 throw new ScriptExecutionException(msg);
             }
@@ -205,15 +205,15 @@ namespace DukSharp
 
         public void EvalString(string code, string filename = "Unknown")
         {
+            duk_push_string(context, code);
             duk_push_string(context, filename);
-            IntPtr c = MarshalHelper.StringToUTF8(code);
-            int err = duk_compile_raw(context, c, UIntPtr.Zero, CompileFlag.Eval | CompileFlag.StrLen | CompileFlag.Safe | CompileFlag.NoSource);
-            Marshal.FreeHGlobal(c);
+
+            int err = duk_pcompile(context, 0);
+            
             string msg = "";
             if (err != 0)
             {
-                IntPtr str = duk_safe_to_lstring(context, -1, UIntPtr.Zero);
-                msg = MarshalHelper.StringFromUTF8(str);
+                msg = duk_safe_to_string(context, -1);
                 duk_pop(context);
                 throw new ScriptCompilationError(msg, filename);
             }
