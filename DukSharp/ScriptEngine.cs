@@ -17,16 +17,16 @@ namespace DukSharp
 {
     public class ScriptEngine
     {
-        private static duk_fatal_function fatalErrorHandler =
+        private static duk_fatal_function s_fatalErrorHandler =
             (ctx, code, msg) =>
             {
                 throw new DuktapeException($"Fatal Duktape error ({code}): {MarshalHelper.StringFromUTF8(msg)}");
             };
 
-        private SafeContextHandle context;
-        private List<Delegate> delegateCache = new List<Delegate>();
+        private SafeContextHandle _context;
+        private List<Delegate> _delegateCache = new List<Delegate>();
 
-        private static HashSet<Type> numericTypes = new HashSet<Type>
+        private static HashSet<Type> s_numericTypes = new HashSet<Type>
             {
                 typeof(sbyte), typeof(byte), typeof(short), typeof(ushort), typeof(int),
                 typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(double),
@@ -35,42 +35,42 @@ namespace DukSharp
 
         public ScriptEngine()
         {
-            context = duk_create_heap(null, null, null, IntPtr.Zero, fatalErrorHandler);
+            _context = duk_create_heap(null, null, null, IntPtr.Zero, s_fatalErrorHandler);
 
-            if (context.IsInvalid)
+            if (_context.IsInvalid)
                 throw new DuktapeException("Failed to create Duktape context");
         }
 
         private object MarshalFromJS(Type t, int i)
         {
-            if (duk_is_null_or_undefined(context, i))
+            if (duk_is_null_or_undefined(_context, i))
                 return null;
             else if (t == typeof(bool))
-                return duk_require_boolean(context, i);
+                return duk_require_boolean(_context, i);
             else if (t == typeof(string))
-                return duk_require_string(context, i);
-            else if (numericTypes.Contains(t))
-                return Convert.ChangeType(duk_require_number(context, i), t);
+                return duk_require_string(_context, i);
+            else if (s_numericTypes.Contains(t))
+                return Convert.ChangeType(duk_require_number(_context, i), t);
             else
             {
-                var s = duk_json_encode(context, i);
+                var s = duk_json_encode(_context, i);
                 return JsonConvert.DeserializeObject(s, t);
             }
         }
 
         private object MarshalFromJSCoerce(Type t, int i)
         {
-            if (duk_is_null_or_undefined(context, i))
+            if (duk_is_null_or_undefined(_context, i))
                 return null;
             else if (t == typeof(bool))
-                return duk_to_boolean(context, i);
+                return duk_to_boolean(_context, i);
             else if (t == typeof(string))
-                return duk_to_string(context, i);
-            else if (numericTypes.Contains(t))
-                return Convert.ChangeType(duk_to_number(context, i), t);
+                return duk_to_string(_context, i);
+            else if (s_numericTypes.Contains(t))
+                return Convert.ChangeType(duk_to_number(_context, i), t);
             else
             {
-                var s = duk_json_encode(context, i);
+                var s = duk_json_encode(_context, i);
                 return JsonConvert.DeserializeObject(s, t);
             }
         }
@@ -83,15 +83,15 @@ namespace DukSharp
             Type t = o.GetType();
 
             if (t == typeof(bool))
-                duk_push_boolean(context, (bool)o);
+                duk_push_boolean(_context, (bool)o);
             else if (t == typeof(string))
-                duk_push_string(context, (string)o);
-            else if (numericTypes.Contains(t))
-                duk_push_number(context, (double)o);
+                duk_push_string(_context, (string)o);
+            else if (s_numericTypes.Contains(t))
+                duk_push_number(_context, (double)o);
             else
             {
-                duk_push_string(context, JsonConvert.SerializeObject(o));
-                duk_json_decode(context, -1);
+                duk_push_string(_context, JsonConvert.SerializeObject(o));
+                duk_json_decode(_context, -1);
             }
 
             return 1;
@@ -105,9 +105,9 @@ namespace DukSharp
 
                     object[] args = new object[@params.Length];
 
-                    for(int i = 0; i < @params.Length; i++)
+                    for (int i = 0; i < @params.Length; i++)
                     {
-                        if(@params[i].GetCustomAttribute<CoerceAttribute>() != null)
+                        if (@params[i].GetCustomAttribute<CoerceAttribute>() != null)
                             args[i] = MarshalFromJSCoerce(@params[i].ParameterType, i);
                         else
                             args[i] = MarshalFromJS(@params[i].ParameterType, i);
@@ -116,7 +116,7 @@ namespace DukSharp
                     return MarshalToJS(function.DynamicInvoke(args));
                 });
 
-            delegateCache.Add(f);
+            _delegateCache.Add(f);
 
             return f;
         }
@@ -126,7 +126,7 @@ namespace DukSharp
             duk_function_list_entry[] fs = new duk_function_list_entry[functions.Count + 1];
 
             int i = 0;
-            foreach(var function in functions)
+            foreach (var function in functions)
             {
                 fs[i].key = MarshalHelper.StringToUTF8(function.Key);
                 fs[i].value = WrapFunction(function.Value);
@@ -138,11 +138,11 @@ namespace DukSharp
             fs[i].value = null;
             fs[i].nargs = 0;
 
-            duk_push_global_object(context);
-            duk_push_object(context);
-            duk_put_function_list(context, -1, fs);
-            duk_put_prop_string(context, -2, name);
-            duk_pop(context);
+            duk_push_global_object(_context);
+            duk_push_object(_context);
+            duk_put_function_list(_context, -1, fs);
+            duk_put_prop_string(_context, -2, name);
+            duk_pop(_context);
 
             for (i = 0; i < functions.Count; i++)
                 Marshal.FreeHGlobal(fs[i].key);
@@ -155,7 +155,7 @@ namespace DukSharp
                 throw new ArgumentException($"{nameof(module)} must be a static class type", nameof(module));
 
             var modAttr = ti.GetCustomAttribute<ScriptModuleAttribute>();
-                
+
             string moduleName = modAttr?.Name;
 
             if (moduleName == null)
@@ -193,39 +193,39 @@ namespace DukSharp
 
         private void SafeCall(int nargs)
         {
-            ReturnCode ret = duk_pcall(context, nargs);
+            ReturnCode ret = duk_pcall(_context, nargs);
 
             if (ret == ReturnCode.Error)
             {
-                string msg = duk_safe_to_string(context, -1);
-                duk_pop(context);
+                string msg = duk_safe_to_string(_context, -1);
+                duk_pop(_context);
                 throw new ScriptExecutionException(msg);
             }
         }
 
         public void EvalString(string code, string filename = "Unknown")
         {
-            duk_push_string(context, code);
-            duk_push_string(context, filename);
+            duk_push_string(_context, code);
+            duk_push_string(_context, filename);
 
-            int err = duk_pcompile(context, 0);
-            
+            int err = duk_pcompile(_context, 0);
+
             string msg = "";
             if (err != 0)
             {
-                msg = duk_safe_to_string(context, -1);
-                duk_pop(context);
+                msg = duk_safe_to_string(_context, -1);
+                duk_pop(_context);
                 throw new ScriptCompilationError(msg, filename);
             }
 
             SafeCall(0);
-            duk_pop(context);
+            duk_pop(_context);
         }
 
         private T ExecFunction<T>(string name, object[] args, bool returns)
         {
-            duk_push_global_object(context);
-            duk_get_prop_string(context, -1, name);
+            duk_push_global_object(_context);
+            duk_get_prop_string(_context, -1, name);
 
             foreach (var arg in args)
                 MarshalToJS(arg);
@@ -234,10 +234,10 @@ namespace DukSharp
 
             T ret = default(T);
 
-            if(returns)
+            if (returns)
                 ret = (T)MarshalFromJS(typeof(T), -1);
 
-            duk_pop(context);
+            duk_pop(_context);
 
             return ret;
         }

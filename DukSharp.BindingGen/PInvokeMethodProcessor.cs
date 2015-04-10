@@ -18,7 +18,7 @@ namespace DukSharp.BindingGen
 
         public Dictionary<string, Tuple<string, string>> TypeOverride { get; } = new Dictionary<string, Tuple<string, string>>();
 
-        private Dictionary<CType, string> internalTypeMap;
+        private Dictionary<CType, string> _internalTypeMap;
 
         public List<string> Usings { get; } = new List<string>();
 
@@ -28,17 +28,17 @@ namespace DukSharp.BindingGen
 
         public Func<string, string> ModifyPublicName { get; set; } = new Func<string, string>(a => a);
 
-        private ClassDeclarationSyntax nativeMethodClass;
-        private ClassDeclarationSyntax rootClass;
+        private ClassDeclarationSyntax _nativeMethodClass;
+        private ClassDeclarationSyntax _rootClass;
 
         private void GenerateInternalTypeMap()
         {
-            internalTypeMap = new Dictionary<CType, string>();
+            _internalTypeMap = new Dictionary<CType, string>();
 
             foreach (var kv in TypeMap)
             {
                 var type = kv.Key;
-                internalTypeMap.Add(new CType(type), kv.Value);
+                _internalTypeMap.Add(new CType(type), kv.Value);
             }
         }
 
@@ -46,12 +46,12 @@ namespace DukSharp.BindingGen
         {
             GenerateInternalTypeMap();
 
-            rootClass = Syntax.ClassDeclaration(Class)
+            _rootClass = Syntax.ClassDeclaration(Class)
                 .AddModifiers(Syntax.Token(SyntaxKind.PublicKeyword))
                 .AddModifiers(Syntax.Token(SyntaxKind.StaticKeyword))
                 .AddModifiers(Syntax.Token(SyntaxKind.PartialKeyword));
 
-            nativeMethodClass = Syntax.ClassDeclaration("NativeMethods")
+            _nativeMethodClass = Syntax.ClassDeclaration("NativeMethods")
                 .AddModifiers(Syntax.Token(SyntaxKind.PrivateKeyword))
                 .AddModifiers(Syntax.Token(SyntaxKind.StaticKeyword));
         }
@@ -61,16 +61,16 @@ namespace DukSharp.BindingGen
             string returnType;
             Dictionary<Argument, string> argTypes = new Dictionary<Argument, string>();
 
-            if(!internalTypeMap.TryGetValue(method.Return.Type, out returnType))
+            if (!_internalTypeMap.TryGetValue(method.Return.Type, out returnType))
             {
                 Console.WriteLine($"Skipping method \"{method.Return.Name}\" due to unknown type \"{method.Return.Type.TypeString}\"");
                 return null;
             }
 
-            foreach(var arg in method.Args)
+            foreach (var arg in method.Args)
             {
                 string type;
-                if (!internalTypeMap.TryGetValue(arg.Type, out type))
+                if (!_internalTypeMap.TryGetValue(arg.Type, out type))
                 {
                     Console.WriteLine($"Skipping method \"{method.Return.Name}\" due to unknown type \"{arg.Type.TypeString}\"");
                     return null;
@@ -78,16 +78,16 @@ namespace DukSharp.BindingGen
 
                 argTypes[arg] = type;
             }
-            
+
             var overrides = TypeOverride.Where(o => o.Key == method.Return.Name);
 
-            foreach(var o in overrides)
+            foreach (var o in overrides)
             {
                 if (o.Value.Item1 == null)
                     returnType = o.Value.Item2;
                 else
                 {
-                    for(int i = 0; i < method.Args.Length; i++)
+                    for (int i = 0; i < method.Args.Length; i++)
                     {
                         if (method.Args[i].Name == o.Value.Item1)
                             argTypes[method.Args[i]] = o.Value.Item2;
@@ -118,7 +118,7 @@ namespace DukSharp.BindingGen
                     .AddParameterListParameters(args.Select(a => Syntax.Parameter(Syntax.Identifier(a.Item1.Name)).WithType(Syntax.ParseTypeName(a.Item2.Item1))).ToArray())
                     .WithSemicolonToken(Syntax.Token(SyntaxKind.SemicolonToken));
 
-            nativeMethodClass = nativeMethodClass.AddMembers(ms);
+            _nativeMethodClass = _nativeMethodClass.AddMembers(ms);
 
             List<StatementSyntax> beforeFunc = new List<StatementSyntax>();
             List<StatementSyntax> afterFunc = new List<StatementSyntax>();
@@ -264,7 +264,7 @@ namespace DukSharp.BindingGen
                 )
                 .WithBody(Syntax.Block(statements));
 
-            rootClass = rootClass.AddMembers(ms);
+            _rootClass = _rootClass.AddMembers(ms);
 
             return method;
         }
@@ -277,21 +277,21 @@ namespace DukSharp.BindingGen
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.CompilerServices")))
                 .AddUsings(Syntax.UsingDirective(Syntax.IdentifierName("System.Runtime.InteropServices")));
 
-            foreach(var use in Usings)
+            foreach (var use in Usings)
             {
                 cu = cu.AddUsings(Syntax.UsingDirective(Syntax.IdentifierName(use)));
             }
 
             NamespaceDeclarationSyntax ns = Syntax.NamespaceDeclaration(Syntax.IdentifierName(Namespace));
 
-            rootClass = rootClass.AddAttributeLists(Syntax.AttributeList(Syntax.SingletonSeparatedList<AttributeSyntax>(Syntax.Attribute(Syntax.ParseName("GeneratedCode"))
+            _rootClass = _rootClass.AddAttributeLists(Syntax.AttributeList(Syntax.SingletonSeparatedList<AttributeSyntax>(Syntax.Attribute(Syntax.ParseName("GeneratedCode"))
                                 .AddArgumentListArguments(
                                     Syntax.AttributeArgument(Syntax.LiteralExpression(SyntaxKind.StringLiteralExpression, Syntax.Literal("DukSharp.BindingGen"))),
                                     Syntax.AttributeArgument(Syntax.LiteralExpression(SyntaxKind.StringLiteralExpression, Syntax.Literal("1.0")))
                                 ))));
 
-            rootClass = rootClass.AddMembers(nativeMethodClass);
-            ns = ns.AddMembers(rootClass);
+            _rootClass = _rootClass.AddMembers(_nativeMethodClass);
+            ns = ns.AddMembers(_rootClass);
             cu = cu.AddMembers(ns);
             cu = cu.NormalizeWhitespace();
 

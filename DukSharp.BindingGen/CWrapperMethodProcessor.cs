@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DukSharp.BindingGen
 {
-    class CWrapperMethodProcessor : IMethodProcessor
+    internal class CWrapperMethodProcessor : IMethodProcessor
     {
-        private StringBuilder csb;
+        private StringBuilder _csb;
 
         public List<string> CLines { get; } = new List<string>();
 
@@ -16,8 +16,8 @@ namespace DukSharp.BindingGen
 
         public void Begin()
         {
-            csb = new StringBuilder();
-            csb.Append(GetCPreamble());
+            _csb = new StringBuilder();
+            _csb.Append(GetCPreamble());
         }
 
         private string GetWrapperForFunction(Method method)
@@ -30,7 +30,7 @@ namespace DukSharp.BindingGen
             {
                 var arg = method.Args[i];
 
-                if(arg.Type.TypeString == "")
+                if (arg.Type.TypeString == "")
                 {
                     Console.WriteLine($"Skipping method \"{method.Return.Name}\", no type for argument \"{arg.Name}\"");
                     return null;
@@ -84,15 +84,15 @@ namespace DukSharp.BindingGen
             if (wrapper == null)
                 return null;
 
-            csb.Append(wrapper);
-            csb.Append('\n');
+            _csb.Append(wrapper);
+            _csb.Append('\n');
 
             return new Method(new Argument(Prefix + method.Return.Name, method.Return.Type), method.Args);
         }
 
         public string GetOutput()
         {
-            return csb.ToString();
+            return _csb.ToString();
         }
     }
 }

@@ -11,12 +11,12 @@ namespace Automate.UITests
     [TestFixture]
     public class Tests
     {
-        AndroidApp app;
+        private AndroidApp _app;
 
         [SetUp]
         public void BeforeEachTest()
         {
-            app = ConfigureApp.Android.StartApp();
+            _app = ConfigureApp.Android.StartApp();
         }
 
         [Test]
@@ -24,10 +24,10 @@ namespace Automate.UITests
         {
             Func<AppQuery, AppQuery> MyButton = c => c.Button("myButton");
 
-            app.Tap(MyButton);
-            app.Tap(MyButton);
-            AppResult[] results = app.Query(MyButton);
-            app.Screenshot("Button clicked twice.");
+            _app.Tap(MyButton);
+            _app.Tap(MyButton);
+            AppResult[] results = _app.Query(MyButton);
+            _app.Screenshot("Button clicked twice.");
 
             Assert.AreEqual("2 clicks!", results[0].Text);
         }

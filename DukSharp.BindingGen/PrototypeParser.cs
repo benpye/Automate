@@ -16,7 +16,7 @@ using Syntax = Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace DukSharp.BindingGen
 {
-    class PrototypeParser
+    internal class PrototypeParser
     {
         public List<string> Protoypes { get; } = new List<string>();
 
@@ -111,11 +111,11 @@ namespace DukSharp.BindingGen
                 methods.Add(method);
             }
 
-            for(int i = 0; i < methods.Count; i++)
+            for (int i = 0; i < methods.Count; i++)
             {
-                foreach(var processor in Processors)
+                foreach (var processor in Processors)
                 {
-                    if(methods[i] != null)
+                    if (methods[i] != null)
                         methods[i] = processor.ProcessMethod(methods[i]);
                 }
             }

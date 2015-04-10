@@ -133,7 +133,6 @@ namespace DukSharp.Interop
 
     public static partial class Duktape
     {
-
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate int duk_c_function(IntPtr ctx);
 

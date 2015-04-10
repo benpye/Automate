@@ -10,9 +10,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace DukSharp.BindingGen
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             DirectoryInfo di = new DirectoryInfo("D:/GitHub/duktape/website/api");
             var fis = di.GetFiles("*.yaml");
@@ -88,7 +88,7 @@ namespace DukSharp.BindingGen
             pro.ModifyPublicName = a => a.Substring("public_".Length);
 
             pro.Usings.Add("DukSharp.Interop.SafeHandles");
-            
+
             cw.CLines.Add("#include \"duktape.h\"\n");
             cw.Prefix = "public_";
 

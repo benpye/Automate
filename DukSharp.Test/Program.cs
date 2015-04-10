@@ -26,9 +26,9 @@ namespace DukSharp.Test
         }
     }
 
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             ScriptEngine se = new ScriptEngine();
             se.AddModule(typeof(TestModule));
@@ -47,7 +47,7 @@ namespace DukSharp.Test
                 return ['This', 'Is', 'A', 'Test'];
             }
             ");
-            se.ExecFunction("testFunc", "Hello", "World", new List<String>{"This", "Is", "An", "Object"});
+            se.ExecFunction("testFunc", "Hello", "World", new List<String> { "This", "Is", "An", "Object" });
             var test = se.ExecFunction<string[]>("testFunc2");
             Console.ReadLine();
         }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DukSharp.BindingGen
 {
-    interface IMethodProcessor
+    internal interface IMethodProcessor
     {
         void Begin();
         Method ProcessMethod(Method method);

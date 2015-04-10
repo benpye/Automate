@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DukSharp
 {
-    class DuktapeException : Exception
+    internal class DuktapeException : Exception
     {
         public DuktapeException(string message) : base(message)
         {
