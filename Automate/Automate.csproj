@@ -107,4 +107,10 @@
       <Link>duktape\libs\x86_64\libduktape.so</Link>
     </AndroidNativeLibrary>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DukSharp\DukSharp.csproj">
+      <Project>{F8F47776-D0E6-4208-8D5C-D37F6168C7C6}</Project>
+      <Name>DukSharp</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

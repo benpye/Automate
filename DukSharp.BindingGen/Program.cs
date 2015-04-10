@@ -64,7 +64,10 @@ namespace DukSharp.BindingGen
             pro.TypeMap.Add("duk_map_char_function", "duk_map_char_function");
             pro.TypeMap.Add("duk_c_function", "duk_c_function");
             pro.TypeMap.Add("duk_safe_call_function", "duk_safe_call_function");
-            pro.TypeMap.Add("duk_memory_functions *", "out duk_memory_functions");
+            // Disable this mapping - the function isn't really helpful to us
+            // and we need to add out support to the binding generator, without
+            // this we can use the generated code directly
+            //pro.TypeMap.Add("duk_memory_functions *", "out duk_memory_functions");
             pro.TypeMap.Add("const duk_function_list_entry *", "duk_function_list_entry[]");
             pro.TypeMap.Add("const duk_number_list_entry *", "duk_number_list_entry[]");
 

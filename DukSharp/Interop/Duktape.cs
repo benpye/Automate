@@ -451,12 +451,6 @@ namespace DukSharp.Interop
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static public void duk_get_memory_functions(SafeContextHandle ctx, out duk_memory_functions out_funcs)
-        {
-            NativeMethods.public_duk_get_memory_functions(ctx, out out_funcs);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static public double duk_get_number(SafeContextHandle ctx, int index)
         {
             var returnValue = NativeMethods.public_duk_get_number(ctx, index);
@@ -1772,8 +1766,6 @@ namespace DukSharp.Interop
             static public extern IntPtr public_duk_get_lstring(SafeContextHandle ctx, int index, IntPtr out_len);
             [DllImport("duktape", CallingConvention = CallingConvention.Cdecl, EntryPoint = "public_duk_get_magic")]
             static public extern int public_duk_get_magic(SafeContextHandle ctx, int index);
-            [DllImport("duktape", CallingConvention = CallingConvention.Cdecl, EntryPoint = "public_duk_get_memory_functions")]
-            static public extern void public_duk_get_memory_functions(SafeContextHandle ctx, out duk_memory_functions out_funcs);
             [DllImport("duktape", CallingConvention = CallingConvention.Cdecl, EntryPoint = "public_duk_get_number")]
             static public extern double public_duk_get_number(SafeContextHandle ctx, int index);
             [DllImport("duktape", CallingConvention = CallingConvention.Cdecl, EntryPoint = "public_duk_get_pointer")]

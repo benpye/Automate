@@ -6,6 +6,6 @@ LOCAL_CFLAGS += -std=c99
 LOCAL_LDLIBS := -lm
 
 LOCAL_MODULE    := duktape
-LOCAL_SRC_FILES := duktape.c
+LOCAL_SRC_FILES := duktape.c public_duktape.c
 
 include $(BUILD_SHARED_LIBRARY)
